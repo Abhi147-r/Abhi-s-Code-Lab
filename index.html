@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Abhi's CodeLab - Apsara Pro AI Tutor</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root{ --accent:#22d3ee; --accent-2:#0891b2; }
+body{font-family:'Inter',sans-serif}
+code,pre{font-family:'Fira Code',monospace}
+.font-display{font-family:'Sora',sans-serif}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:rgba(0,0,0,.1)}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px}
+@media (prefers-reduced-motion: reduce){ *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important} }
+
+#themeLayer{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.app-shell{position:relative;z-index:1}
+
+/* ---- Accent utility classes (driven by theme / color picker) ---- */
+.accent-text{color:var(--accent)}
+.accent-border{border-color:var(--accent)!important}
+.accent-bg{background-color:var(--accent)!important;color:#04202a}
+.accent-bg-soft{background-color:color-mix(in srgb, var(--accent) 18%, transparent)!important;color:var(--accent)}
+.accent-badge{background-color:color-mix(in srgb, var(--accent) 22%, transparent);color:var(--accent)}
+.btn-accent{background-color:var(--accent);color:#04202a;transition:filter .15s, transform .15s}
+.btn-accent:hover{filter:brightness(.9);transform:translateY(-1px)}
+.mentor-avatar{width:48px;height:48px;border-radius:9999px;object-fit:cover;border:2px solid var(--accent);background:#0f172a}
+.group:hover .accent-hover-text{color:var(--accent)}
+.mcq-opt:hover{border-color:var(--accent)}
+.glass{backdrop-filter:blur(10px);background:rgba(255,255,255,.04)}
+
+/* ---- fade/slide utility animations (interaction-triggered, one-shot) ---- */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.anim-in{animation:fadeInUp .45s ease both}
+@keyframes popIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+.anim-pop{animation:popIn .3s ease both}
+
+/* ===================== GALAXY THEME ===================== */
+.nebula{position:absolute;border-radius:50%;filter:blur(60px);opacity:.35;animation:nebulaDrift 22s ease-in-out infinite}
+@keyframes nebulaDrift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(30px,-20px) scale(1.15)}}
+.star{position:absolute;top:-40px;width:3px;height:3px;background:#fff;border-radius:50%;
+  box-shadow:0 0 10px 2px rgba(255,255,255,.85);animation:fallStar linear infinite}
+.star::after{content:'';position:absolute;top:-26px;left:1px;width:1.5px;height:26px;
+  background:linear-gradient(to bottom, rgba(255,255,255,.9), rgba(255,255,255,0));}
+@keyframes fallStar{
+  0%{transform:translate(0,0) rotate(18deg);opacity:0}
+  8%{opacity:1} 92%{opacity:1}
+  100%{transform:translate(-30vw,115vh) rotate(18deg);opacity:0}
+}
+.shooting-star{position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;
+  box-shadow:0 0 14px 3px rgba(255,255,255,.95);animation:shootAcross 1.4s linear forwards}
+.shooting-star::after{content:'';position:absolute;top:0;right:0;width:120px;height:2px;
+  background:linear-gradient(to left, rgba(255,255,255,.9), transparent);transform:translateX(2px)}
+@keyframes shootAcross{0%{transform:translate(0,0);opacity:0}5%{opacity:1}100%{transform:translate(-38vw,32vh);opacity:0}}
+.constellation-dot{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:.5;animation:twinkle 4s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.2}50%{opacity:.8}}
+.cursor-particle{position:fixed;width:4px;height:4px;border-radius:50%;pointer-events:none;z-index:40;
+  background:var(--accent);box-shadow:0 0 8px 2px var(--accent);animation:particleFade .7s ease forwards}
+@keyframes particleFade{to{opacity:0;transform:translateY(-16px) scale(.4)}}
+
+/* ===================== OCEAN THEME ===================== */
+.wave-band{position:absolute;left:0;width:200%;background-repeat:repeat-x;background-size:1200px 100%;}
+.wave1{bottom:0;height:180px;opacity:.55;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 180' preserveAspectRatio='none'%3E%3Cpath d='M0,90 C300,150 900,30 1200,90 L1200,180 L0,180 Z' fill='%2338bdf8'/%3E%3C/svg%3E");
+  animation:waveSlide 7s linear infinite}
+.wave2{bottom:0;height:150px;opacity:.4;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 150' preserveAspectRatio='none'%3E%3Cpath d='M0,80 C400,20 800,140 1200,70 L1200,150 L0,150 Z' fill='%2314b8a6'/%3E%3C/svg%3E");
+  animation:waveSlide 11s linear infinite reverse}
+.wave3{bottom:0;height:110px;opacity:.3;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 110' preserveAspectRatio='none'%3E%3Cpath d='M0,60 C300,110 900,10 1200,60 L1200,110 L0,110 Z' fill='%23bae6fd'/%3E%3C/svg%3E");
+  animation:waveSlide 15s linear infinite}
+@keyframes waveSlide{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.moon{position:absolute;top:8%;right:10%;width:70px;height:70px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, #fefce8, #e0e7ff 70%);box-shadow:0 0 45px 12px rgba(224,231,255,.35);animation:moonGlow 6s ease-in-out infinite}
+@keyframes moonGlow{0%,100%{opacity:.85}50%{opacity:1}}
+.bubble{position:absolute;bottom:-20px;border-radius:50%;border:1px solid rgba(255,255,255,.35);
+  background:rgba(255,255,255,.06);animation:bubbleRise linear infinite}
+@keyframes bubbleRise{0%{transform:translateY(0) translateX(0);opacity:0}10%{opacity:.7}100%{transform:translateY(-100vh) translateX(15px);opacity:0}}
+
+/* ===================== NATURE / WIND THEME ===================== */
+.tree{position:absolute;bottom:0;transform-origin:bottom center;animation:treeSway ease-in-out infinite}
+@keyframes treeSway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+.leaf{position:absolute;top:-30px;border-radius:2px 12px 2px 12px;animation:leafFall linear infinite}
+@keyframes leafFall{
+  0%{transform:translate(0,0) rotate(0deg);opacity:0}
+  8%{opacity:.9}
+  50%{transform:translate(-40px,50vh) rotate(180deg)}
+  92%{opacity:.9}
+  100%{transform:translate(20px,105vh) rotate(360deg);opacity:0}
+}
+.fog-band{position:absolute;left:-20%;width:140%;height:120px;background:linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+  animation:fogDrift linear infinite}
+@keyframes fogDrift{0%{transform:translateX(-10%)}100%{transform:translateX(10%)}}
+
+/* ===================== BLACK & WHITE THEME ===================== */
+body.theme-bw{background:#050505;color:#f1f5f9}
+.grain-layer{position:absolute;inset:-50%;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grainShift 1s steps(4) infinite}
+@keyframes grainShift{0%{transform:translate(0,0)}25%{transform:translate(-2%,1%)}50%{transform:translate(1%,-2%)}75%{transform:translate(-1%,2%)}100%{transform:translate(0,0)}}
+.vignette{position:absolute;inset:0;box-shadow:inset 0 0 220px 60px rgba(0,0,0,.75);pointer-events:none}
+body.theme-bw .bg-slate-900,
+body.theme-bw .bg-slate-900\/80,
+body.theme-bw .bg-slate-900\/50,
+body.theme-bw .bg-slate-900\/40,
+body.theme-bw .bg-slate-800,
+body.theme-bw .bg-slate-800\/60,
+body.theme-bw .bg-slate-800\/80{background-color:rgba(255,255,255,.045)!important}
+body.theme-bw .border-slate-800,
+body.theme-bw .border-slate-700,
+body.theme-bw .border-slate-700\/60{border-color:rgba(255,255,255,.16)!important}
+
+/* ===================== DESERT THEME ===================== */
+.sand{position:absolute;height:3px;border-radius:3px;
+  background:linear-gradient(90deg, rgba(251,191,36,0) 0%, rgba(251,191,36,.8) 45%, rgba(255,237,213,.9) 55%, rgba(251,191,36,0) 100%);
+  animation:windBlow linear infinite;filter:blur(.3px)}
+@keyframes windBlow{0%{transform:translateX(-25vw) scaleX(.6);opacity:0}12%{opacity:1}88%{opacity:1}100%{transform:translateX(125vw) scaleX(1.4);opacity:0}}
+.haze{position:absolute;inset:-10% -50% -10% -50%;
+  background:repeating-linear-gradient(100deg, rgba(217,119,6,.10) 0px, rgba(217,119,6,.10) 2px, transparent 2px, transparent 40px);
+  animation:hazeDrift 9s linear infinite}
+@keyframes hazeDrift{0%{transform:translateX(0)}100%{transform:translateX(120px)}}
+.dune{position:absolute;left:0;width:200%;background-repeat:repeat-x;background-size:1400px 100%}
+@keyframes duneSlide{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.dust{position:absolute;border-radius:50%;background:rgba(255,237,213,.5);animation:dustFloat linear infinite}
+@keyframes dustFloat{0%{transform:translate(0,0);opacity:0}10%{opacity:.6}100%{transform:translate(20px,-60vh);opacity:0}}
+
+/* ---- corner grid pulse (cyberpunk / default) ---- */
+.corner-pulse{position:fixed;bottom:0;right:0;width:280px;height:280px;pointer-events:none;z-index:0;
+  background-image:linear-gradient(color-mix(in srgb, var(--accent) 25%, transparent) 1px, transparent 1px),
+                    linear-gradient(90deg, color-mix(in srgb, var(--accent) 25%, transparent) 1px, transparent 1px);
+  background-size:26px 26px;mask-image:radial-gradient(circle at bottom right, black, transparent 70%);
+  animation:gridPulse 4s ease-in-out infinite}
+@keyframes gridPulse{0%,100%{opacity:.35}50%{opacity:.85}}
+
+/* ---- WHITE / light theme: sun rays ---- */
+.sunray{position:absolute;top:-20%;left:50%;width:2px;height:60vh;transform-origin:top center;
+  background:linear-gradient(to bottom, rgba(251,191,36,.35), transparent);animation:raySway 6s ease-in-out infinite}
+@keyframes raySway{0%,100%{opacity:.4}50%{opacity:.9}}
+
+.slogan-fade{transition:opacity .5s ease}
+
+/* ================= LIGHT THEME OVERRIDES ================= */
+body.theme-light{background:#f1f5f9;color:#0f172a}
+body.theme-light .bg-slate-950{background-color:#f1f5f9!important}
+body.theme-light .bg-slate-900,
+body.theme-light .bg-slate-900\/80,
+body.theme-light .bg-slate-900\/50,
+body.theme-light .bg-slate-900\/40,
+body.theme-light .bg-slate-800,
+body.theme-light .bg-slate-800\/60,
+body.theme-light .bg-slate-800\/80{background-color:#ffffff!important}
+body.theme-light .border-slate-800,
+body.theme-light .border-slate-700,
+body.theme-light .border-slate-700\/60{border-color:#e2e8f0!important}
+body.theme-light .text-white,
+body.theme-light .text-slate-100,
+body.theme-light .text-slate-200{color:#0f172a!important}
+body.theme-light .text-slate-300{color:#1e293b!important}
+body.theme-light .text-slate-400{color:#475569!important}
+body.theme-light .text-slate-500{color:#64748b!important}
+body.theme-light .backdrop-blur-md{backdrop-filter:none!important}
+body.theme-light .hover\:bg-slate-700:hover{background-color:#f1f5f9!important}
+body.theme-light .prose-invert,
+body.theme-bw .prose-invert{
+  --tw-prose-body:#1e293b; --tw-prose-headings:#0f172a; --tw-prose-lead:#1e293b;
+  --tw-prose-links:var(--accent); --tw-prose-bold:#0f172a; --tw-prose-counters:#475569;
+  --tw-prose-bullets:#94a3b8; --tw-prose-hr:#e2e8f0; --tw-prose-quotes:#0f172a;
+  --tw-prose-quote-borders:#e2e8f0; --tw-prose-captions:#64748b; --tw-prose-code:#0f172a;
+  --tw-prose-pre-code:#e2e8f0; --tw-prose-pre-bg:#0f172a; --tw-prose-th-borders:#cbd5e1; --tw-prose-td-borders:#e2e8f0;
+}
+body.theme-bw .prose-invert{
+  --tw-prose-body:#e2e8f0; --tw-prose-headings:#ffffff; --tw-prose-bold:#ffffff; --tw-prose-quotes:#ffffff;
+}
+
+.mcq-opt.correct{background:rgba(16,185,129,.25)!important;border-color:#10b981!important}
+.mcq-opt.wrong{background:rgba(239,68,68,.25)!important;border-color:#ef4444!important}
+
+.sidebar-drawer{transition:transform .3s ease}
+@media(max-width:767px){
+  .sidebar-drawer{position:fixed;top:0;left:0;height:100vh;width:82vw;max-width:320px;z-index:50;
+    background-color:#0f172a;transform:translateX(-100%)}
+  .sidebar-drawer.open{transform:translateX(0)}
+  body.theme-light .sidebar-drawer{background-color:#ffffff}
+  body.theme-bw .sidebar-drawer{background-color:#0a0a0a}
+}
+
+/* ---- Focus Mode ---- */
+body.focus-mode aside{display:none!important}
+body.focus-mode #mobileTopBar{display:none!important}
+body.focus-mode main{max-width:820px;margin:0 auto;width:100%}
+.focus-exit{position:fixed;bottom:18px;right:18px;z-index:45}
+
+/* ---- Cinematic intro overlay ---- */
+#introOverlay{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at center, rgba(4,10,20,.92), rgba(2,6,14,.98));padding:1rem;
+  transition:opacity .5s ease, transform .5s ease}
+#introOverlay.fade-out{opacity:0;transform:translateY(-40px);pointer-events:none}
+.intro-card{max-width:480px;width:100%;text-align:center;padding:2.25rem 1.75rem;border-radius:1.5rem;
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);backdrop-filter:blur(14px);
+  animation:popIn .6s cubic-bezier(.2,.9,.25,1) both}
+.intro-title{font-size:2rem;letter-spacing:.04em}
+
+/* ---- Knowledge map ring ---- */
+.progress-ring{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:conic-gradient(var(--accent) var(--pct,0deg), rgba(255,255,255,.09) 0deg)}
+.progress-ring-inner{width:50px;height:50px;border-radius:50%;background:#0f172a;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700}
+body.theme-light .progress-ring-inner{background:#ffffff}
+
+/* ---- terminal ---- */
+.terminal{background:#04070c;border:1px solid rgba(255,255,255,.12);border-radius:.75rem;padding:1rem;
+  font-family:'Fira Code',monospace;font-size:.8rem;color:#a7f3d0;white-space:pre-wrap;word-break:break-word}
+</style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col transition-colors duration-500" id="bodyTheme">
+
+<div id="themeLayer"></div>
+<div class="corner-pulse" id="cornerPulse"></div>
+
+<!-- ===================== CINEMATIC INTRO OVERLAY ===================== -->
+<div id="introOverlay">
+  <div class="intro-card">
+    <button onclick="dismissIntro()" class="absolute -mt-2 -mr-2 float-right text-slate-400 hover:text-white text-lg" style="position:relative;top:-8px;right:-4px">✕</button>
+    <div class="intro-title font-display font-extrabold accent-text mb-1">✨ APSARA PRO</div>
+    <p class="text-slate-300 text-sm mb-4">Intelligent AI Assistant</p>
+    <p class="text-slate-200 italic text-sm mb-6">"Build. Learn. Create. Become."</p>
+    <button onclick="dismissIntro()" class="btn-accent px-6 py-2.5 rounded-xl text-sm font-semibold mb-6">Explore APSARA PRO</button>
+    <div class="border-t border-white/10 pt-4">
+      <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">Today's Thought</p>
+      <p id="introThought" class="text-sm accent-text font-medium">"Small progress every day becomes extraordinary skill."</p>
+    </div>
+  </div>
+</div>
+
+<div class="app-shell flex flex-1 overflow-hidden flex-col md:flex-row relative">
+
+  <!-- Mobile top bar -->
+  <div id="mobileTopBar" class="md:hidden flex items-center justify-between px-4 h-14 bg-slate-900/90 border-b border-slate-800 sticky top-0 z-30">
+    <button onclick="toggleSidebar()" class="text-slate-100 text-2xl leading-none px-1">☰</button>
+    <h1 class="text-base font-bold tracking-wider accent-text cursor-pointer" onclick="goHome()">Abhi's <span class="text-white">CodeLab</span></h1>
+    <button onclick="toggleFocusMode()" class="text-lg" title="Focus Mode">🎯</button>
+  </div>
+
+  <!-- Overlay behind mobile drawer -->
+  <div id="sidebarOverlay" onclick="toggleSidebar()" class="hidden fixed inset-0 bg-black/60 z-40 md:hidden"></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebarDrawer" class="sidebar-drawer md:static md:translate-x-0 w-full md:w-80 bg-slate-900/70 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col p-4 overflow-y-auto">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="hidden md:block text-xl font-bold tracking-wider accent-text cursor-pointer" onclick="goHome()">Abhi's <span class="text-white">CodeLab</span></h1>
+      <button onclick="toggleSidebar()" class="md:hidden text-slate-400 text-sm ml-auto">✕ Close</button>
+    </div>
+
+    <!-- Profile -->
+    <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-3 flex items-center gap-3 mb-4 shadow-lg">
+      <img src="/static/mentor.png" alt="Abhimanyu Rana" class="mentor-avatar" onerror="this.style.display='none'">
+      <div>
+        <h2 class="text-sm font-semibold text-white">Abhimanyu Rana</h2>
+        <p class="text-xs accent-text">Apsara Pro Architect</p>
+      </div>
+    </div>
+
+    <!-- Topic search -->
+    <div class="mb-4 relative">
+      <label class="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-2 block">🔍 Search Any Topic</label>
+      <div class="flex gap-2">
+        <input id="topicSearchInput" type="text" placeholder="e.g. Variables" autocomplete="off"
+          class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none accent-border"
+          oninput="renderSearchSuggestions()" onkeydown="if(event.key==='Enter') runTopicSearch()">
+        <button onclick="runTopicSearch()" class="btn-accent px-3 py-2 rounded-lg text-xs font-semibold">Go</button>
+      </div>
+      <div id="searchSuggestions" class="hidden absolute z-20 mt-1 w-full bg-slate-800 border border-slate-700 rounded-lg overflow-hidden shadow-xl"></div>
+      <p class="text-[10px] text-slate-500 mt-1">Pick a language below first, then search any topic.</p>
+    </div>
+
+    <!-- Language selector -->
+    <div class="mb-6">
+      <label class="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-2 block">Select Tech Stack</label>
+      <div class="space-y-2" id="langContainer">
+        <button onclick="selectLanguage('Python')" class="lang-btn w-full text-left px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium transition flex items-center justify-between group" data-lang="Python"><span>🐍 Python</span><span class="text-xs accent-hover-text opacity-0 group-hover:opacity-100 transition">Select</span></button>
+        <button onclick="selectLanguage('JavaScript')" class="lang-btn w-full text-left px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium transition flex items-center justify-between group" data-lang="JavaScript"><span>⚡ JavaScript</span><span class="text-xs accent-hover-text opacity-0 group-hover:opacity-100 transition">Select</span></button>
+        <button onclick="selectLanguage('C++')" class="lang-btn w-full text-left px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium transition flex items-center justify-between group" data-lang="C++"><span>🚀 C++ & DSA</span><span class="text-xs accent-hover-text opacity-0 group-hover:opacity-100 transition">Select</span></button>
+        <button onclick="selectLanguage('Java')" class="lang-btn w-full text-left px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium transition flex items-center justify-between group" data-lang="Java"><span>☕ Java</span><span class="text-xs accent-hover-text opacity-0 group-hover:opacity-100 transition">Select</span></button>
+        <button onclick="selectLanguage('SQL')" class="lang-btn w-full text-left px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium transition flex items-center justify-between group" data-lang="SQL"><span>🗄️ SQL Databases</span><span class="text-xs accent-hover-text opacity-0 group-hover:opacity-100 transition">Select</span></button>
+      </div>
+    </div>
+
+    <!-- Tools -->
+    <div class="mb-6">
+      <label class="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-2 block">AI Tools</label>
+      <div class="space-y-2">
+        <button onclick="openCodeLab()" class="w-full text-left px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium transition">💻 CodeLab (Run / Debug)</button>
+        <button onclick="openInterviewMode()" class="w-full text-left px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium transition">🎯 Interview Mode</button>
+        <button onclick="openDebugAssistant()" class="w-full text-left px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium transition">🐛 AI Debug Assistant</button>
+        <button onclick="toggleFocusMode()" class="w-full text-left px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium transition">🎯 Focus Mode</button>
+      </div>
+    </div>
+
+    <!-- Difficulty -->
+    <div class="mb-6">
+      <label class="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-2 block">Difficulty Level</label>
+      <div class="grid grid-cols-3 gap-1.5" id="diffContainer">
+        <button onclick="setDifficulty('Beginner')" class="diff-btn px-2 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-center transition border border-slate-700" data-diff="Beginner">Beginner</button>
+        <button onclick="setDifficulty('Intermediate')" class="diff-btn btn-accent px-2 py-1.5 rounded text-xs font-medium text-center transition border accent-border" data-diff="Intermediate">Intermediate</button>
+        <button onclick="setDifficulty('Advanced')" class="diff-btn px-2 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-center transition border border-slate-700" data-diff="Advanced">Advanced</button>
+      </div>
+    </div>
+
+    <!-- Explanation mode -->
+    <div class="mb-6">
+      <label class="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-2 block">Explanation Mode</label>
+      <div class="grid grid-cols-2 gap-2" id="modeContainer">
+        <button onclick="setMode('Hinglish')" class="mode-btn btn-accent px-3 py-2 rounded text-xs font-medium text-center transition border accent-border" data-mode="Hinglish">Casual Hinglish</button>
+        <button onclick="setMode('English')" class="mode-btn px-3 py-2 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-center transition border border-slate-700" data-mode="English">Professional English</button>
+      </div>
+    </div>
+
+    <!-- Themes -->
+    <div class="mb-6">
+      <label class="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-2 block">Theme Engine</label>
+      <div class="flex items-center gap-2 flex-wrap" id="themeSwatches">
+        <button onclick="setTheme('cyberpunk')" data-theme="cyberpunk" class="theme-swatch w-7 h-7 rounded-full bg-slate-950 border-2 border-cyan-400 hover:scale-110 transition shadow" title="Cyberpunk"></button>
+        <button onclick="setTheme('galaxy')" data-theme="galaxy" class="theme-swatch w-7 h-7 rounded-full bg-indigo-950 border-2 border-indigo-400 hover:scale-110 transition shadow" title="Galaxy - stars & nebula"></button>
+        <button onclick="setTheme('sea')" data-theme="sea" class="theme-swatch w-7 h-7 rounded-full bg-blue-900 border-2 border-teal-400 hover:scale-110 transition shadow" title="Ocean - waves & moon"></button>
+        <button onclick="setTheme('nature')" data-theme="nature" class="theme-swatch w-7 h-7 rounded-full bg-emerald-950 border-2 border-emerald-400 hover:scale-110 transition shadow" title="Nature - trees & leaves"></button>
+        <button onclick="setTheme('bw')" data-theme="bw" class="theme-swatch w-7 h-7 rounded-full bg-black border-2 border-white hover:scale-110 transition shadow" title="Black & White cinematic"></button>
+        <button onclick="setTheme('desert')" data-theme="desert" class="theme-swatch w-7 h-7 rounded-full bg-amber-950 border-2 border-amber-500 hover:scale-110 transition shadow" title="Desert - dunes & sand"></button>
+        <button onclick="setTheme('light')" data-theme="light" class="theme-swatch w-7 h-7 rounded-full bg-white border-2 border-amber-300 hover:scale-110 transition shadow" title="White / Light"></button>
+      </div>
+    </div>
+
+    <!-- Accent / text color picker -->
+    <div>
+      <label class="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-2 block">Accent / Text Colour</label>
+      <div class="flex items-center gap-2">
+        <input type="color" id="accentPicker" value="#22d3ee" onchange="setAccent(this.value, true)" class="w-9 h-9 rounded cursor-pointer bg-transparent border border-slate-700">
+        <span class="text-xs text-slate-400">Changes highlight & heading colour app-wide</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 flex flex-col bg-slate-900/40 overflow-hidden">
+    <header class="h-14 border-b border-slate-800 px-4 md:px-6 flex items-center justify-between bg-slate-900/30">
+      <div class="text-xs text-slate-400 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        Engine: <strong class="text-slate-200">Apsara Pro AI</strong>
+      </div>
+      <div class="flex items-center gap-3">
+        <div id="statusBadge" class="slogan-fade accent-badge text-xs px-3 py-1 rounded-full max-w-[50vw] md:max-w-xs text-right truncate">
+          ⚡ Instant roadmaps, deep dry runs, and interactive topic tests!
+        </div>
+        <button onclick="toggleFocusMode()" class="hidden md:block text-lg hover:scale-110 transition" title="Toggle Focus Mode">🎯</button>
+      </div>
+    </header>
+
+    <div id="workspace" class="flex-1 p-4 md:p-6 overflow-y-auto"></div>
+  </main>
+</div>
+
+<button id="focusExitBtn" onclick="toggleFocusMode()" class="focus-exit hidden btn-accent px-4 py-2 rounded-full text-xs font-semibold shadow-xl">✕ Exit Focus Mode</button>
+
+<script>
+let currentLanguage = null;
+let currentDifficulty = 'Intermediate';
+let currentMode = 'Hinglish';
+let currentUserId = 'anonymous';
+let completedTopics = [];
+let isLight = false;
+let currentTheme = 'cyberpunk';
+const LANGS = ['Python','JavaScript','C++','Java','SQL'];
+const LANG_ICON = {Python:'🐍',JavaScript:'⚡','C++':'🚀',Java:'☕',SQL:'🗄️'};
+const syllabusCache = {};
+const THEME_ACCENT = {cyberpunk:'#22d3ee', galaxy:'#a78bfa', sea:'#22d3ee', nature:'#4ade80', bw:'#e5e7eb', desert:'#f59e0b', light:'#0891b2'};
+const COMMON_TOPICS = ['Variables','Loops','Functions','Recursion','Arrays','OOP','Inheritance','Pointers','Closures','Async/Await','Exceptions','Hash Maps','Linked Lists','Sorting','Joins','Indexes','Normalization','Generics','Threads','APIs'];
+const THOUGHTS = [
+  '🔥 Keep building.',
+  "💡 Understand, don't memorize.",
+  '🚀 One concept today is better than zero.',
+  '🧠 Errors are part of learning.',
+  '⚡ Your future skill is built today.',
+  '🌱 Small progress every day becomes extraordinary skill.'
+];
+
+/* ===================== INIT / PERSISTENCE ===================== */
+document.addEventListener('DOMContentLoaded', () => {
+  currentTheme = localStorage.getItem('apsara_theme') || 'cyberpunk';
+  const savedAccent = localStorage.getItem('apsara_accent');
+  currentLanguage = localStorage.getItem('apsara_lang') || null;
+  currentDifficulty = localStorage.getItem('apsara_diff') || 'Intermediate';
+  currentMode = localStorage.getItem('apsara_mode') || 'Hinglish';
+
+  setTheme(currentTheme, false);
+  if(savedAccent){ setAccent(savedAccent, false); }
+  setDifficulty(currentDifficulty);
+  setMode(currentMode);
+  if(localStorage.getItem('apsara_focus') === '1'){ toggleFocusMode(true); }
+
+  goHome();
+  setupIntro();
+  setupCursorParticles();
+  setInterval(maybeSpawnShootingStar, 8000);
+});
+
+function goHome(){
+  closeSidebarOnMobile();
+  renderDashboard();
+}
+
+/* ===================== CINEMATIC INTRO ===================== */
+function setupIntro(){
+  const overlay = document.getElementById('introOverlay');
+  if(sessionStorage.getItem('apsara_intro_shown')){
+    overlay.style.display = 'none';
+    return;
+  }
+  document.getElementById('introThought').textContent = '"' + pickThought().replace(/^[^\s]+\s/, '') + '"';
+  sessionStorage.setItem('apsara_intro_shown','1');
+  const autoTimer = setTimeout(dismissIntro, 4500);
+  const dismissOnInteract = () => { dismissIntro(); };
+  document.getElementById('workspace').addEventListener('scroll', dismissOnInteract, {once:true});
+  document.addEventListener('click', function outsideClick(e){
+    if(!overlay.contains(e.target)){ dismissIntro(); document.removeEventListener('click', outsideClick); }
+  });
+  overlay.__autoTimer = autoTimer;
+}
+function dismissIntro(){
+  const overlay = document.getElementById('introOverlay');
+  if(!overlay || overlay.classList.contains('fade-out')) return;
+  overlay.classList.add('fade-out');
+  clearTimeout(overlay.__autoTimer);
+  setTimeout(() => { overlay.style.display = 'none'; }, 550);
+}
+function pickThought(){
+  return THOUGHTS[Math.floor(Math.random()*THOUGHTS.length)];
+}
+
+/* ===================== MOBILE SIDEBAR DRAWER ===================== */
+function toggleSidebar(){
+  document.getElementById('sidebarDrawer').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('hidden');
+}
+function closeSidebarOnMobile(){
+  if(window.innerWidth < 768){
+    document.getElementById('sidebarDrawer').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  }
+}
+
+/* ===================== FOCUS MODE ===================== */
+function toggleFocusMode(forceOn){
+  const body = document.getElementById('bodyTheme');
+  const btn = document.getElementById('focusExitBtn');
+  const shouldBeOn = forceOn === true ? true : !body.classList.contains('focus-mode');
+  body.classList.toggle('focus-mode', shouldBeOn);
+  btn.classList.toggle('hidden', !shouldBeOn);
+  localStorage.setItem('apsara_focus', shouldBeOn ? '1' : '0');
+}
+
+/* ===================== ACCENT COLOR ===================== */
+function setAccent(hex, persist){
+  document.documentElement.style.setProperty('--accent', hex);
+  document.getElementById('accentPicker').value = hex;
+  if(persist) localStorage.setItem('apsara_accent', hex);
+}
+
+/* ===================== SLOGANS (auto-rotating) ===================== */
+const slogans = [
+  "⚡ Instant roadmaps, deep dry runs, and interactive topic tests!",
+  "🧠 AI-powered mentor that teaches like a senior dev, not a textbook.",
+  "🎯 Real interview points baked into every single topic.",
+  "🗣️ Learn in Hinglish or English — whichever clicks for you.",
+  "🏆 Finish topics, clear quick tests, and track your own progress."
+];
+let sloganIndex = 0;
+setInterval(() => {
+  const badge = document.getElementById('statusBadge');
+  badge.style.opacity = 0;
+  setTimeout(() => {
+    sloganIndex = (sloganIndex + 1) % slogans.length;
+    badge.textContent = slogans[sloganIndex];
+    badge.style.opacity = 1;
+  }, 400);
+}, 4000);
+
+/* ===================== THEME ENGINE ===================== */
+function clearThemeLayer(){ document.getElementById('themeLayer').innerHTML = ''; }
+
+function setTheme(theme, persist){
+  currentTheme = theme;
+  const body = document.getElementById('bodyTheme');
+  const cornerPulse = document.getElementById('cornerPulse');
+  clearThemeLayer();
+  cornerPulse.style.display = 'none';
+  body.classList.remove('theme-light','theme-bw');
+  isLight = false;
+
+  document.querySelectorAll('.theme-swatch').forEach(s => {
+    s.style.outline = s.dataset.theme === theme ? '2px solid #fff' : 'none';
+    s.style.outlineOffset = '2px';
+  });
+
+  if(theme === 'galaxy'){
+    body.className = "bg-[#050414] text-slate-100 min-h-screen flex flex-col transition-colors duration-500";
+    buildGalaxy();
+  } else if(theme === 'sea'){
+    body.className = "bg-gradient-to-b from-blue-950 to-slate-950 text-slate-100 min-h-screen flex flex-col transition-colors duration-500";
+    buildSea();
+  } else if(theme === 'nature'){
+    body.className = "bg-gradient-to-b from-[#0a1410] to-[#050505] text-slate-100 min-h-screen flex flex-col transition-colors duration-500";
+    buildNature();
+  } else if(theme === 'bw'){
+    body.className = "theme-bw min-h-screen flex flex-col transition-colors duration-500";
+    buildBW();
+  } else if(theme === 'desert'){
+    body.className = "bg-gradient-to-b from-amber-950 to-slate-950 text-slate-100 min-h-screen flex flex-col transition-colors duration-500";
+    buildDesert();
+  } else if(theme === 'light'){
+    body.className = "theme-light min-h-screen flex flex-col transition-colors duration-500";
+    isLight = true;
+    buildLight();
+  } else {
+    body.className = "bg-slate-950 text-slate-100 min-h-screen flex flex-col transition-colors duration-500";
+    cornerPulse.style.display = 'block';
+  }
+
+  if(!localStorage.getItem('apsara_accent')){
+    setAccent(THEME_ACCENT[theme] || '#22d3ee', false);
+  }
+  if(persist !== false){ localStorage.setItem('apsara_theme', theme); }
+}
+
+function buildGalaxy(){
+  const layer = document.getElementById('themeLayer');
+  // nebula clouds
+  const nebColors = ['#a78bfa','#38bdf8','#f472b6'];
+  for(let i=0;i<3;i++){
+    const n = document.createElement('div');
+    n.className = 'nebula';
+    n.style.width = n.style.height = (260 + Math.random()*180) + 'px';
+    n.style.left = (Math.random()*80) + 'vw';
+    n.style.top = (Math.random()*70) + 'vh';
+    n.style.background = nebColors[i % nebColors.length];
+    n.style.animationDelay = (i*2) + 's';
+    layer.appendChild(n);
+  }
+  // constellation dots
+  for(let i=0;i<18;i++){
+    const d = document.createElement('div');
+    d.className = 'constellation-dot';
+    d.style.left = Math.random()*100 + 'vw';
+    d.style.top = Math.random()*70 + 'vh';
+    d.style.animationDelay = Math.random()*4 + 's';
+    layer.appendChild(d);
+  }
+  // falling stars
+  for(let i=0;i<70;i++){
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = Math.random()*130 - 15 + 'vw';
+    s.style.animationDuration = (2.5 + Math.random()*4) + 's';
+    s.style.animationDelay = (Math.random()*6) + 's';
+    const size = 2 + Math.random()*2.5;
+    s.style.width = size + 'px';
+    s.style.height = size + 'px';
+    layer.appendChild(s);
+  }
+}
+function maybeSpawnShootingStar(){
+  if(currentTheme !== 'galaxy') return;
+  const layer = document.getElementById('themeLayer');
+  const s = document.createElement('div');
+  s.className = 'shooting-star';
+  s.style.left = (40 + Math.random()*50) + 'vw';
+  s.style.top = (5 + Math.random()*20) + 'vh';
+  layer.appendChild(s);
+  setTimeout(() => s.remove(), 1500);
+}
+function setupCursorParticles(){
+  let last = 0;
+  document.addEventListener('mousemove', (e) => {
+    if(currentTheme !== 'galaxy') return;
+    const now = Date.now();
+    if(now - last < 70) return;
+    last = now;
+    const p = document.createElement('div');
+    p.className = 'cursor-particle';
+    p.style.left = e.clientX + 'px';
+    p.style.top = e.clientY + 'px';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 700);
+  });
+}
+
+function buildSea(){
+  const layer = document.getElementById('themeLayer');
+  const moon = document.createElement('div'); moon.className = 'moon'; layer.appendChild(moon);
+  const w1 = document.createElement('div'); w1.className = 'wave-band wave1'; layer.appendChild(w1);
+  const w2 = document.createElement('div'); w2.className = 'wave-band wave2'; layer.appendChild(w2);
+  const w3 = document.createElement('div'); w3.className = 'wave-band wave3'; layer.appendChild(w3);
+  for(let i=0;i<16;i++){
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    const size = 4 + Math.random()*8;
+    b.style.width = size+'px'; b.style.height = size+'px';
+    b.style.left = Math.random()*100 + 'vw';
+    b.style.animationDuration = (6 + Math.random()*6) + 's';
+    b.style.animationDelay = Math.random()*6 + 's';
+    layer.appendChild(b);
+  }
+}
+
+function buildNature(){
+  const layer = document.getElementById('themeLayer');
+  const fog = document.createElement('div'); fog.className='fog-band'; fog.style.bottom='0'; fog.style.animationDuration='18s'; layer.appendChild(fog);
+  const fog2 = document.createElement('div'); fog2.className='fog-band'; fog2.style.bottom='60px'; fog2.style.animationDuration='24s'; fog2.style.animationDirection='reverse'; layer.appendChild(fog2);
+  // tree silhouettes (simple SVG shapes)
+  const treeSvg = (w,h) => `<svg width="${w}" height="${h}" viewBox="0 0 100 160" xmlns="http://www.w3.org/2000/svg"><rect x="46" y="100" width="8" height="60" fill="#020604"/><ellipse cx="50" cy="70" rx="45" ry="70" fill="#020604"/></svg>`;
+  const positions = [ {l:'2vw', s:.9}, {l:'14vw', s:1.3}, {l:'80vw', s:1.1}, {l:'92vw', s:.8} ];
+  positions.forEach((p,i) => {
+    const t = document.createElement('div');
+    t.className = 'tree';
+    t.style.left = p.l;
+    t.style.width = (110*p.s)+'px';
+    t.style.animationDuration = (5 + i) + 's';
+    t.innerHTML = treeSvg(110*p.s, 170*p.s);
+    layer.appendChild(t);
+  });
+  for(let i=0;i<20;i++){
+    const lf = document.createElement('div');
+    lf.className = 'leaf';
+    const size = 6 + Math.random()*6;
+    lf.style.width = size+'px'; lf.style.height=(size*0.7)+'px';
+    lf.style.background = i%2===0 ? '#4ade80' : '#86efac';
+    lf.style.left = Math.random()*100 + 'vw';
+    lf.style.animationDuration = (7 + Math.random()*6) + 's';
+    lf.style.animationDelay = Math.random()*6 + 's';
+    layer.appendChild(lf);
+  }
+}
+
+function buildBW(){
+  const layer = document.getElementById('themeLayer');
+  const grain = document.createElement('div'); grain.className = 'grain-layer'; layer.appendChild(grain);
+  const vig = document.createElement('div'); vig.className = 'vignette'; layer.appendChild(vig);
+}
+
+function buildDesert(){
+  const layer = document.getElementById('themeLayer');
+  const haze = document.createElement('div'); haze.className = 'haze'; layer.appendChild(haze);
+  const duneSvg = (color) => `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1400 200' preserveAspectRatio='none'%3E%3Cpath d='M0,140 C250,80 500,180 750,120 C1000,60 1200,160 1400,110 L1400,200 L0,200 Z' fill='${color}'/%3E%3C/svg%3E")`;
+  const d1 = document.createElement('div'); d1.className='dune'; d1.style.bottom='0'; d1.style.height='150px'; d1.style.opacity='.55';
+  d1.style.backgroundImage = duneSvg('%23b45309'); d1.style.animation='duneSlide 26s linear infinite'; layer.appendChild(d1);
+  const d2 = document.createElement('div'); d2.className='dune'; d2.style.bottom='0'; d2.style.height='100px'; d2.style.opacity='.4';
+  d2.style.backgroundImage = duneSvg('%23f59e0b'); d2.style.animation='duneSlide 40s linear infinite reverse'; layer.appendChild(d2);
+  for(let i=0;i<22;i++){
+    const s = document.createElement('div');
+    s.className = 'sand';
+    s.style.top = Math.random()*100 + 'vh';
+    s.style.width = (80 + Math.random()*160) + 'px';
+    s.style.animationDuration = (2.5 + Math.random()*3.5) + 's';
+    s.style.animationDelay = (Math.random()*4) + 's';
+    layer.appendChild(s);
+  }
+  for(let i=0;i<16;i++){
+    const du = document.createElement('div');
+    du.className = 'dust';
+    const size = 2 + Math.random()*3;
+    du.style.width = size+'px'; du.style.height = size+'px';
+    du.style.left = Math.random()*100+'vw';
+    du.style.bottom = '0';
+    du.style.animationDuration = (5+Math.random()*5)+'s';
+    du.style.animationDelay = Math.random()*5+'s';
+    layer.appendChild(du);
+  }
+}
+
+function buildLight(){
+  const layer = document.getElementById('themeLayer');
+  for(let i=0;i<6;i++){
+    const r = document.createElement('div');
+    r.className = 'sunray';
+    r.style.left = (10 + i*15) + 'vw';
+    r.style.animationDelay = (i*0.6) + 's';
+    r.style.transform = `rotate(${(i-2.5)*6}deg)`;
+    layer.appendChild(r);
+  }
+}
+
+/* ===================== CONTROLS ===================== */
+function setDifficulty(diff){
+  currentDifficulty = diff;
+  localStorage.setItem('apsara_diff', diff);
+  document.querySelectorAll('.diff-btn').forEach(btn=>{
+    btn.className = btn.dataset.diff===diff
+      ? "diff-btn btn-accent px-2 py-1.5 rounded text-xs font-medium text-center transition border accent-border"
+      : "diff-btn px-2 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-center transition border border-slate-700";
+  });
+}
+
+function setMode(mode){
+  currentMode = mode;
+  localStorage.setItem('apsara_mode', mode);
+  document.querySelectorAll('.mode-btn').forEach(btn=>{
+    btn.className = btn.dataset.mode===mode
+      ? "mode-btn btn-accent px-3 py-2 rounded text-xs font-medium text-center transition border accent-border"
+      : "mode-btn px-3 py-2 rounded bg-slate-800 hover:bg-slate-700 text-xs font-medium text-center transition border border-slate-700";
+  });
+}
+
+/* ===================== DAILY MISSION / STREAK ===================== */
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+function getMission(){
+  const key = 'apsara_mission_' + todayKey();
+  let m = JSON.parse(localStorage.getItem(key) || 'null');
+  if(!m){ m = {target:2, done:0}; localStorage.setItem(key, JSON.stringify(m)); }
+  return m;
+}
+function bumpMission(){
+  const key = 'apsara_mission_' + todayKey();
+  const m = getMission();
+  m.done = Math.min(m.target, m.done + 1);
+  localStorage.setItem(key, JSON.stringify(m));
+}
+function bumpStreak(){
+  const s = JSON.parse(localStorage.getItem('apsara_streak') || '{"lastDate":null,"count":0}');
+  const today = todayKey();
+  if(s.lastDate === today) return s;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  s.count = (s.lastDate === yesterday) ? s.count + 1 : 1;
+  s.lastDate = today;
+  localStorage.setItem('apsara_streak', JSON.stringify(s));
+  return s;
+}
+function getStreak(){
+  return JSON.parse(localStorage.getItem('apsara_streak') || '{"lastDate":null,"count":0}');
+}
+
+/* ===================== SMART DASHBOARD ===================== */
+async function renderDashboard(){
+  const workspace = document.getElementById('workspace');
+  workspace.innerHTML = `<div class="max-w-5xl mx-auto anim-in">
+    <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-5 mb-5 flex items-center justify-between gap-4">
+      <div>
+        <p class="text-xs uppercase tracking-wider text-slate-400 mb-1">Today's Thought</p>
+        <p id="dashThought" class="text-sm md:text-base font-medium accent-text">${pickThought()}</p>
+      </div>
+      <div class="text-3xl">🪄</div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-3 mb-5" id="statsRow">
+      <div class="bg-slate-800/50 border border-slate-700 rounded-xl p-3 text-center">
+        <p class="text-xl font-bold text-white" id="statStreak">0</p>
+        <p class="text-[11px] text-slate-400">Day Streak 🔥</p>
+      </div>
+      <div class="bg-slate-800/50 border border-slate-700 rounded-xl p-3 text-center">
+        <p class="text-xl font-bold text-white" id="statTopics">0</p>
+        <p class="text-[11px] text-slate-400">Topics Done</p>
+      </div>
+      <div class="bg-slate-800/50 border border-slate-700 rounded-xl p-3 text-center">
+        <p class="text-xl font-bold text-white" id="statLangs">0</p>
+        <p class="text-[11px] text-slate-400">Stacks Explored</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+      <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4">
+        <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">📅 Daily Mission</p>
+        <div id="missionBox"></div>
+      </div>
+      <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-4">
+        <p class="text-xs uppercase tracking-wider text-slate-400 mb-2">🔮 Recommended Next</p>
+        <div id="recommendBox" class="text-sm text-slate-300">Loading...</div>
+      </div>
+    </div>
+
+    <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">🗺️ Interactive Knowledge Map</h3>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6" id="knowledgeMap">
+      ${LANGS.map(l => `<div class="bg-slate-800/50 border border-slate-700 rounded-xl p-3 text-center animate-pulse">
+        <div class="progress-ring mx-auto mb-2"><div class="progress-ring-inner">…</div></div>
+        <p class="text-xs text-slate-300">${LANG_ICON[l]} ${l}</p>
+      </div>`).join('')}
+    </div>
+
+    <div class="text-center py-6">
+      <p class="text-slate-400 text-sm max-w-md mx-auto">Pick a stack above or use the AI Tools in the sidebar — CodeLab, Interview Mode, and the Debug Assistant.</p>
+    </div>
+  </div>`;
+
+  // mission
+  const m = getMission();
+  document.getElementById('missionBox').innerHTML = `
+    <p class="text-sm text-slate-200 mb-2">Complete <strong class="accent-text">${m.target}</strong> topics today</p>
+    <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden mb-1">
+      <div class="h-full accent-bg" style="width:${Math.min(100,(m.done/m.target)*100)}%"></div>
+    </div>
+    <p class="text-xs text-slate-400">${m.done} / ${m.target} done</p>`;
+
+  const streak = getStreak();
+  document.getElementById('statStreak').textContent = streak.count || 0;
+
+  await buildKnowledgeMap();
+}
+
+async function fetchSyllabusCached(lang){
+  if(syllabusCache[lang]) return syllabusCache[lang];
+  try{
+    const res = await fetch('/get-syllabus', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({language: lang})});
+    const data = await res.json();
+    if(res.ok){ syllabusCache[lang] = data; return data; }
+  } catch(e){}
+  return null;
+}
+async function fetchProgress(lang){
+  try{
+    const res = await fetch('/get-progress', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({user_id: currentUserId, language: lang})});
+    const data = await res.json();
+    return data.completed || [];
+  } catch(e){ return []; }
+}
+
+async function buildKnowledgeMap(){
+  const results = await Promise.all(LANGS.map(async (lang) => {
+    const [syl, done] = await Promise.all([fetchSyllabusCached(lang), fetchProgress(lang)]);
+    const total = syl && syl.topics ? syl.topics.length : 0;
+    return {lang, total, done, pct: total ? Math.round((done.length/total)*100) : 0};
+  }));
+
+  const mapEl = document.getElementById('knowledgeMap');
+  mapEl.innerHTML = results.map(r => `
+    <button onclick="selectLanguage('${r.lang}')" class="bg-slate-800/50 border border-slate-700 hover:accent-border rounded-xl p-3 text-center transition group">
+      <div class="progress-ring mx-auto mb-2" style="--pct:${r.pct*3.6}deg">
+        <div class="progress-ring-inner">${r.pct}%</div>
+      </div>
+      <p class="text-xs text-slate-300 group-hover:accent-hover-text">${LANG_ICON[r.lang]} ${r.lang}</p>
+    </button>`).join('');
+
+  const totalDone = results.reduce((a,r) => a + r.done.length, 0);
+  const started = results.filter(r => r.done.length > 0).length;
+  document.getElementById('statTopics').textContent = totalDone;
+  document.getElementById('statLangs').textContent = started;
+
+  // recommendation
+  const inProgress = results.filter(r => r.total > 0 && r.done.length > 0 && r.done.length < r.total);
+  const box = document.getElementById('recommendBox');
+  if(inProgress.length){
+    const pick = inProgress[0];
+    const syl = syllabusCache[pick.lang];
+    const nextTopic = syl.topics.find(t => !pick.done.includes(t)) || syl.topics[0];
+    box.innerHTML = `<p class="mb-2">${LANG_ICON[pick.lang]} <strong>${pick.lang}</strong> is ${pick.pct}% complete — you're closer than you think.</p>
+      <button onclick="selectLanguage('${pick.lang}')" class="btn-accent px-3 py-1.5 rounded-lg text-xs font-semibold">Continue: ${nextTopic}</button>`;
+  } else {
+    const fresh = results.find(r => r.total > 0) || {lang:'Python'};
+    const syl = syllabusCache[fresh.lang];
+    const firstTopic = syl && syl.topics ? syl.topics[0] : 'Variables';
+    box.innerHTML = `<p class="mb-2">Start your journey with ${LANG_ICON[fresh.lang]} <strong>${fresh.lang}</strong>.</p>
+      <button onclick="selectLanguage('${fresh.lang}')" class="btn-accent px-3 py-1.5 rounded-lg text-xs font-semibold">Start: ${firstTopic}</button>`;
+  }
+}
+
+/* ===================== SYLLABUS / LANGUAGE ===================== */
+async function selectLanguage(lang){
+  currentLanguage = lang;
+  localStorage.setItem('apsara_lang', lang);
+  closeSidebarOnMobile();
+  document.querySelectorAll('.lang-btn').forEach(btn=>{
+    btn.className = btn.dataset.lang===lang
+      ? "lang-btn accent-bg-soft w-full text-left px-3 py-2.5 rounded-lg border accent-border text-sm font-medium transition flex items-center justify-between"
+      : "lang-btn w-full text-left px-3 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium transition flex items-center justify-between group";
+  });
+
+  const workspace = document.getElementById('workspace');
+  workspace.innerHTML = `<div class="text-center py-12 accent-text animate-pulse">Loading ${lang} Roadmap & Topics...</div>`;
+
+  try{
+    const [data] = await Promise.all([
+      fetchSyllabusCached(lang),
+      loadProgress(lang)
+    ]);
+
+    if(data){
+      const topicsHtml = data.topics.map(topic => {
+        const done = completedTopics.includes(topic);
+        return `
+        <button onclick="startTopicFlow('${topic.replace(/'/g,"\\'")}')" class="p-3 bg-slate-800/80 hover:bg-slate-700/80 border ${done ? 'border-emerald-500/60' : 'border-slate-700'} hover:accent-border rounded-xl text-left transition flex items-center justify-between group">
+          <span class="text-sm font-medium text-white group-hover:accent-hover-text">${done ? '✅' : '📖'} ${topic}</span>
+          <span class="text-xs accent-badge px-2 py-1 rounded">${done ? 'Review' : 'Start'} &rarr;</span>
+        </button>`;
+      }).join('');
+
+      const pct = Math.round((completedTopics.length / data.topics.length) * 100) || 0;
+
+      workspace.innerHTML = `
+        <div class="max-w-4xl mx-auto anim-in">
+          <button onclick="goHome()" class="text-xs text-slate-400 hover:accent-text mb-3">&larr; Dashboard</button>
+          <div class="bg-slate-800/50 border border-slate-700 rounded-2xl p-5 mb-6">
+            <h2 class="text-lg font-bold text-white mb-1">🗺️ ${data.language} Master Roadmap</h2>
+            <p class="text-xs accent-text font-mono mb-3">${data.roadmap}</p>
+            <div class="w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div class="h-full accent-bg" style="width:${pct}%"></div>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-1">${pct}% complete</p>
+          </div>
+          <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">Sequential Topics</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${topicsHtml}</div>
+        </div>`;
+    } else {
+      workspace.innerHTML = `<div class="text-red-400 text-center py-12">Failed to load syllabus.</div>`;
+    }
+  } catch(err){
+    workspace.innerHTML = `<div class="text-red-400 text-center py-12">Server connection error. Make sure main.py is running.</div>`;
+  }
+}
+
+async function loadProgress(lang){
+  completedTopics = await fetchProgress(lang);
+}
+
+function renderSearchSuggestions(){
+  const val = document.getElementById('topicSearchInput').value.trim().toLowerCase();
+  const box = document.getElementById('searchSuggestions');
+  if(!val){ box.classList.add('hidden'); box.innerHTML=''; return; }
+  const matches = COMMON_TOPICS.filter(t => t.toLowerCase().includes(val)).slice(0,6);
+  if(!matches.length){ box.classList.add('hidden'); box.innerHTML=''; return; }
+  box.innerHTML = matches.map(t => `<button onclick="pickSuggestion('${t}')" class="block w-full text-left px-3 py-2 text-sm hover:bg-slate-700 text-slate-200">${t}</button>`).join('');
+  box.classList.remove('hidden');
+}
+function pickSuggestion(topic){
+  document.getElementById('topicSearchInput').value = topic;
+  document.getElementById('searchSuggestions').classList.add('hidden');
+  runTopicSearch();
+}
+function runTopicSearch(){
+  const val = document.getElementById('topicSearchInput').value.trim();
+  document.getElementById('searchSuggestions').classList.add('hidden');
+  if(!val) return;
+  if(!currentLanguage){
+    alert('Pehle ek language select karo sidebar se, phir topic search karo.');
+    return;
+  }
+  startTopicFlow(val);
+}
+
+/* ===================== TOPIC FLOW ===================== */
+function startTopicFlow(topicName){
+  const workspace = document.getElementById('workspace');
+  workspace.innerHTML = `
+    <div class="max-w-2xl mx-auto text-center py-20 anim-pop">
+      <div class="inline-block p-4 accent-bg-soft rounded-2xl mb-4 text-3xl">🎯</div>
+      <h2 class="text-2xl font-bold text-white mb-2">${topicName}</h2>
+      <p class="text-slate-400 text-sm mb-6">${currentLanguage} • ${currentDifficulty} • Apsara Pro is ready to teach this topic.</p>
+      <p class="text-lg accent-text font-medium mb-6">Are you ready? 🚀</p>
+      <button onclick="loadTopic('${topicName.replace(/'/g,"\\'")}')" class="btn-accent px-6 py-3 rounded-xl text-sm font-semibold transition">Yes, Start Learning</button>
+    </div>`;
+}
+
+async function loadTopic(topicName){
+  const workspace = document.getElementById('workspace');
+  workspace.innerHTML = `<div class="text-center py-20 accent-text animate-pulse text-lg font-medium">⚡ Apsara Pro AI is preparing your lesson on "${topicName}"...</div>`;
+  const proseClass = isLight || currentTheme==='bw' ? 'prose' : 'prose prose-invert';
+
+  try{
+    const response = await fetch('/ask-ai', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({language: currentLanguage, topic: topicName, mode: currentMode, difficulty: currentDifficulty, user_id: currentUserId})
+    });
+    const data = await response.json();
+
+    if(response.ok){
+      workspace.innerHTML = `
+        <div class="max-w-4xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-6 shadow-xl anim-in">
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-4 mb-6 border-b border-slate-800">
+            <div>
+              <span class="text-xs accent-badge px-2.5 py-1 rounded-full uppercase">${currentLanguage} • ${currentDifficulty}</span>
+              <h2 class="text-xl font-bold text-white mt-2">${topicName}</h2>
+            </div>
+            <button onclick="selectLanguage('${currentLanguage}')" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg text-slate-300 transition">&larr; Back to Topics</button>
+          </div>
+
+          <div class="${proseClass} max-w-none text-sm leading-relaxed space-y-4">
+            ${marked.parse(data.response)}
+          </div>
+
+          <div class="mt-8 border-t border-slate-800 pt-5">
+            <label class="text-xs font-semibold tracking-wider text-slate-400 uppercase mb-2 block">💬 Koi Doubt hai? Poocho yahan</label>
+            <div class="flex gap-2">
+              <input id="doubtInput" type="text" placeholder="Type your doubt about this topic..."
+                class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none accent-border"
+                onkeydown="if(event.key==='Enter') askDoubt('${topicName.replace(/'/g,"\\'")}')">
+              <button onclick="askDoubt('${topicName.replace(/'/g,"\\'")}')" class="btn-accent px-4 py-2 rounded-lg text-xs font-semibold">Ask</button>
+            </div>
+            <div id="doubtAnswer" class="mt-3 text-sm text-slate-300"></div>
+          </div>
+
+          <div class="mt-8 border-t border-slate-800 pt-5 text-center">
+            <p class="accent-text text-sm mb-3">Samajh aaya? Ready for a quick test? 📝</p>
+            <button onclick="loadTest('${topicName.replace(/'/g,"\\'")}')" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-sm font-semibold transition text-white">Take Quick Test</button>
+          </div>
+        </div>`;
+    } else {
+      workspace.innerHTML = `<div class="text-red-400 text-center py-12">Error: ${data.detail}</div>`;
+    }
+  } catch(err){
+    workspace.innerHTML = `<div class="text-red-400 text-center py-12">Failed to fetch AI response.</div>`;
+  }
+}
+
+async function askDoubt(topicName){
+  const input = document.getElementById('doubtInput');
+  const box = document.getElementById('doubtAnswer');
+  const doubt = input.value.trim();
+  if(!doubt) return;
+  const proseClass = isLight || currentTheme==='bw' ? 'prose' : 'prose prose-invert';
+  box.innerHTML = `<span class="accent-text animate-pulse">Apsara Pro is thinking...</span>`;
+  try{
+    const res = await fetch('/ask-doubt', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({language: currentLanguage, topic: topicName, doubt, difficulty: currentDifficulty})
+    });
+    const data = await res.json();
+    box.innerHTML = res.ok
+      ? `<div class="${proseClass} max-w-none text-sm bg-slate-800/60 border border-slate-700 rounded-xl p-4 anim-in">${marked.parse(data.response)}</div>`
+      : `<span class="text-red-400">Error: ${data.detail}</span>`;
+    input.value = '';
+  } catch(e){
+    box.innerHTML = `<span class="text-red-400">Failed to reach server.</span>`;
+  }
+}
+
+/* ===================== MCQ TEST ===================== */
+async function loadTest(topicName){
+  const workspace = document.getElementById('workspace');
+  workspace.innerHTML = `<div class="text-center py-20 text-emerald-400 animate-pulse text-lg font-medium">📝 Generating your quiz on "${topicName}"...</div>`;
+
+  try{
+    const res = await fetch('/generate-test', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({language: currentLanguage, topic: topicName, difficulty: currentDifficulty})
+    });
+    const data = await res.json();
+    if(!res.ok){ workspace.innerHTML = `<div class="text-red-400 text-center py-12">Error: ${data.detail}</div>`; return; }
+
+    const qHtml = data.questions.map((q, qi) => `
+      <div class="mb-6 bg-slate-800/60 border border-slate-700 rounded-xl p-4" data-qindex="${qi}">
+        <p class="text-sm font-semibold text-white mb-3">${qi+1}. ${q.question}</p>
+        <div class="space-y-2">
+          ${q.options.map((opt, oi) => `
+            <div class="mcq-opt cursor-pointer px-3 py-2 rounded-lg border border-slate-700 bg-slate-900/50 text-sm text-slate-200"
+                 onclick="selectAnswer(${qi}, ${oi}, ${q.correct_index})">${opt}</div>
+          `).join('')}
+        </div>
+        <p class="hidden text-xs text-slate-400 mt-2 explanation" data-qexp="${qi}">${q.explanation}</p>
+      </div>
+    `).join('');
+
+    workspace.innerHTML = `
+      <div class="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-6 shadow-xl anim-in">
+        <h2 class="text-xl font-bold text-white mb-1">📝 Quick Test: ${topicName}</h2>
+        <p class="text-xs text-slate-400 mb-6">${currentLanguage} • ${currentDifficulty}</p>
+        ${qHtml}
+        <div class="text-center mt-4">
+          <button onclick="finishTest('${topicName.replace(/'/g,"\\'")}')" class="btn-accent px-6 py-2.5 rounded-xl text-sm font-semibold">Finish Topic ✅</button>
+          <button onclick="selectLanguage('${currentLanguage}')" class="ml-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm text-slate-200">Back to Topics</button>
+        </div>
+      </div>`;
+  } catch(e){
+    workspace.innerHTML = `<div class="text-red-400 text-center py-12">Failed to generate test.</div>`;
+  }
+}
+
+function selectAnswer(qi, oi, correctIndex){
+  const block = document.querySelector(`[data-qindex="${qi}"]`);
+  const opts = block.querySelectorAll('.mcq-opt');
+  opts.forEach((el, idx) => {
+    el.classList.remove('correct','wrong');
+    if(idx === correctIndex) el.classList.add('correct');
+  });
+  if(oi !== correctIndex) opts[oi].classList.add('wrong');
+  block.querySelector('.explanation').classList.remove('hidden');
+}
+
+async function finishTest(topicName){
+  try{
+    await fetch('/mark-complete', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({user_id: currentUserId, language: currentLanguage, topic: topicName})
+    });
+  } catch(e){}
+  bumpMission();
+  bumpStreak();
+  delete syllabusCache[currentLanguage + '__unused__']; // no-op guard
+  alert('Topic completed! Great work 🎉');
+  selectLanguage(currentLanguage);
+}
+
+/* ===================== CODELAB: RUN / DEBUG ===================== */
+function openCodeLab(){
+  closeSidebarOnMobile();
+  const workspace = document.getElementById('workspace');
+  const lang = currentLanguage || 'JavaScript';
+  workspace.innerHTML = `
+    <div class="max-w-4xl mx-auto anim-in">
+      <button onclick="goHome()" class="text-xs text-slate-400 hover:accent-text mb-3">&larr; Dashboard</button>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 class="text-xl font-bold text-white">💻 CodeLab — Run &amp; Debug</h2>
+          <select id="codeLabLang" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+            ${LANGS.map(l => `<option value="${l}" ${l===lang?'selected':''}>${LANG_ICON[l]} ${l}</option>`).join('')}
+          </select>
+        </div>
+        <textarea id="codeEditorInput" rows="10" spellcheck="false" placeholder="// Write or paste your code here..."
+          class="w-full bg-black/60 border border-slate-700 rounded-xl p-3 text-sm text-emerald-200 font-mono focus:outline-none accent-border"></textarea>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <button onclick="runCode()" class="btn-accent px-4 py-2 rounded-lg text-xs font-semibold">▶ Run Code</button>
+          <button onclick="openInlineDebug()" class="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200">🐛 Find the Bug</button>
+        </div>
+        <div id="codeLabOutputWrap" class="mt-4"></div>
+      </div>
+    </div>`;
+}
+
+async function runCode(){
+  const lang = document.getElementById('codeLabLang').value;
+  const code = document.getElementById('codeEditorInput').value;
+  const out = document.getElementById('codeLabOutputWrap');
+  if(!code.trim()){ out.innerHTML = `<p class="text-red-400 text-sm">Pehle kuch code likho.</p>`; return; }
+
+  if(lang === 'JavaScript'){
+    const logs = [];
+    const fakeConsole = { log: (...a) => logs.push(a.map(String).join(' ')), error: (...a) => logs.push('❌ ' + a.map(String).join(' ')) };
+    try{
+      const fn = new Function('console', code);
+      fn(fakeConsole);
+      out.innerHTML = `<p class="text-xs text-slate-400 mb-1">Terminal (in-browser JS sandbox):</p><div class="terminal">${(logs.join('\\n') || '(no console output)').replace(/</g,'&lt;')}</div>`;
+    } catch(err){
+      out.innerHTML = `<p class="text-xs text-slate-400 mb-1">Terminal:</p><div class="terminal">❌ ${String(err.message).replace(/</g,'&lt;')}</div>`;
+    }
+    return;
+  }
+
+  out.innerHTML = `<div class="text-emerald-400 animate-pulse text-sm">🤖 Apsara Pro is simulating this ${lang} run...</div>`;
+  try{
+    const res = await fetch('/ask-ai', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({language: lang, topic: `${topic} — Top Interview Questions with Model Answers`, mode: currentMode, difficulty: currentDifficulty, user_id: currentUserId})
+    });
+    const data = await res.json();
+    box.innerHTML = res.ok
+      ? `<div class="prose prose-invert max-w-none text-sm bg-slate-800/60 border border-slate-700 rounded-xl p-4 anim-in">${marked.parse(data.response)}</div>`
+      : `<p class="text-red-400 text-sm">Error: ${data.detail}</p>`;
+  } catch(e){
+    box.innerHTML = `<p class="text-red-400 text-sm">Failed to reach server.</p>`;
+  }
+}
+</script>
+</body>
+</html>
