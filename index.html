@@ -1119,38 +1119,118 @@ function openCodeLab(){
     </div>`;
 }
 
+// ===== FIXED: real compiler run (Judge0), no more Groq-simulation, no more undefined vars =====
 async function runCode(){
   const lang = document.getElementById('codeLabLang').value;
   const code = document.getElementById('codeEditorInput').value;
   const out = document.getElementById('codeLabOutputWrap');
   if(!code.trim()){ out.innerHTML = `<p class="text-red-400 text-sm">Pehle kuch code likho.</p>`; return; }
 
-  if(lang === 'JavaScript'){
-    const logs = [];
-    const fakeConsole = { log: (...a) => logs.push(a.map(String).join(' ')), error: (...a) => logs.push('❌ ' + a.map(String).join(' ')) };
-    try{
-      const fn = new Function('console', code);
-      fn(fakeConsole);
-      out.innerHTML = `<p class="text-xs text-slate-400 mb-1">Terminal (in-browser JS sandbox):</p><div class="terminal">${(logs.join('\\n') || '(no console output)').replace(/</g,'&lt;')}</div>`;
-    } catch(err){
-      out.innerHTML = `<p class="text-xs text-slate-400 mb-1">Terminal:</p><div class="terminal">❌ ${String(err.message).replace(/</g,'&lt;')}</div>`;
-    }
+  if(lang === 'SQL'){
+    out.innerHTML = `<p class="text-amber-400 text-sm">⚠️ SQL yahan run nahi hoti (real database attached nahi hai).</p>`;
     return;
   }
 
-  out.innerHTML = `<div class="text-emerald-400 animate-pulse text-sm">🤖 Apsara Pro is simulating this ${lang} run...</div>`;
+  out.innerHTML = `<div class="text-emerald-400 animate-pulse text-sm">⚙️ Compiling & running on real ${lang} runtime...</div>`;
   try{
-    const res = await fetch('/ask-ai', {
+    const res = await fetch('/run-code', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({language: lang, topic: `${topic} — Top Interview Questions with Model Answers`, mode: currentMode, difficulty: currentDifficulty, user_id: currentUserId})
+      body: JSON.stringify({language: lang, code, user_id: currentUserId})
     });
     const data = await res.json();
-    box.innerHTML = res.ok
-      ? `<div class="prose prose-invert max-w-none text-sm bg-slate-800/60 border border-slate-700 rounded-xl p-4 anim-in">${marked.parse(data.response)}</div>`
-      : `<p class="text-red-400 text-sm">Error: ${data.detail}</p>`;
+    if(!res.ok){ out.innerHTML = `<p class="text-red-400 text-sm">Error: ${data.detail}</p>`; return; }
+    const r = data.result;
+    let terminalText = r.stdout || '';
+    if(r.stderr) terminalText += '\n❌ ' + r.stderr;
+    if(r.compile_output) terminalText += '\n⚠️ Compile: ' + r.compile_output;
+    out.innerHTML = `<p class="text-xs text-slate-400 mb-1">Status: ${r.status} ${r.time ? '• '+r.time+'s' : ''} ${r.memory ? '• '+r.memory+'KB' : ''}</p>
+      <div class="terminal">${(terminalText || '(no output)').replace(/</g,'&lt;')}</div>`;
   } catch(e){
-    box.innerHTML = `<p class="text-red-400 text-sm">Failed to reach server.</p>`;
+    out.innerHTML = `<p class="text-red-400 text-sm">Failed to reach server.</p>`;
   }
+}
+
+// ===== NEW: Interview Mode (was missing entirely) =====
+function openInterviewMode(){
+  closeSidebarOnMobile();
+  const workspace = document.getElementById('workspace');
+  const lang = currentLanguage || 'Python';
+  workspace.innerHTML = `
+    <div class="max-w-3xl mx-auto anim-in">
+      <button onclick="goHome()" class="text-xs text-slate-400 hover:accent-text mb-3">&larr; Dashboard</button>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-6">
+        <h2 class="text-xl font-bold text-white mb-4">🎯 Interview Mode</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+          <select id="interviewLang" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+            ${LANGS.map(l => `<option value="${l}" ${l===lang?'selected':''}>${LANG_ICON[l]} ${l}</option>`).join('')}
+          </select>
+          <input id="interviewTopic" type="text" placeholder="e.g. Inheritance, Closures, Joins..."
+            class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500">
+        </div>
+        <button onclick="runInterview()" class="btn-accent px-5 py-2.5 rounded-xl text-sm font-semibold">Start Interview</button>
+        <div id="interviewOutput" class="mt-6"></div>
+      </div>
+    </div>`;
+}
+async function runInterview(){
+  const lang = document.getElementById('interviewLang').value;
+  const topic = document.getElementById('interviewTopic').value.trim();
+  const out = document.getElementById('interviewOutput');
+  if(!topic){ out.innerHTML = `<p class="text-red-400 text-sm">Pehle topic likho.</p>`; return; }
+  out.innerHTML = `<div class="text-emerald-400 animate-pulse text-sm">🎯 Preparing interview questions...</div>`;
+  const proseClass = isLight || currentTheme==='bw' ? 'prose' : 'prose prose-invert';
+  try{
+    const res = await fetch('/interview', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({language: lang, topic, difficulty: currentDifficulty, mode: currentMode, user_id: currentUserId})
+    });
+    const data = await res.json();
+    out.innerHTML = res.ok
+      ? `<div class="${proseClass} max-w-none text-sm bg-slate-800/60 border border-slate-700 rounded-xl p-4 anim-in">${marked.parse(data.response)}</div>`
+      : `<p class="text-red-400 text-sm">Error: ${data.detail}</p>`;
+  } catch(e){ out.innerHTML = `<p class="text-red-400 text-sm">Failed to reach server.</p>`; }
+}
+
+// ===== NEW: Debug Assistant (was missing entirely) =====
+function openDebugAssistant(){
+  closeSidebarOnMobile();
+  const workspace = document.getElementById('workspace');
+  const lang = currentLanguage || 'Python';
+  workspace.innerHTML = `
+    <div class="max-w-3xl mx-auto anim-in">
+      <button onclick="goHome()" class="text-xs text-slate-400 hover:accent-text mb-3">&larr; Dashboard</button>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-6">
+        <h2 class="text-xl font-bold text-white mb-4">🐛 AI Debug Assistant</h2>
+        <select id="debugLang" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white mb-3">
+          ${LANGS.map(l => `<option value="${l}" ${l===lang?'selected':''}>${LANG_ICON[l]} ${l}</option>`).join('')}
+        </select>
+        <textarea id="debugCode" rows="8" spellcheck="false" placeholder="Paste your buggy code here..."
+          class="w-full bg-black/60 border border-slate-700 rounded-xl p-3 text-sm text-emerald-200 font-mono focus:outline-none accent-border mb-3"></textarea>
+        <input id="debugError" type="text" placeholder="Error message (optional)"
+          class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 mb-3">
+        <button onclick="runDebug()" class="btn-accent px-5 py-2.5 rounded-xl text-sm font-semibold">🐛 Find the Bug</button>
+        <div id="debugOutput" class="mt-6"></div>
+      </div>
+    </div>`;
+}
+async function runDebug(){
+  const lang = document.getElementById('debugLang').value;
+  const code = document.getElementById('debugCode').value;
+  const error = document.getElementById('debugError').value.trim();
+  const out = document.getElementById('debugOutput');
+  if(!code.trim()){ out.innerHTML = `<p class="text-red-400 text-sm">Pehle code paste karo.</p>`; return; }
+  out.innerHTML = `<div class="text-emerald-400 animate-pulse text-sm">🐛 Debugging your code...</div>`;
+  const proseClass = isLight || currentTheme==='bw' ? 'prose' : 'prose prose-invert';
+  try{
+    const res = await fetch('/debug', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({language: lang, code, error: error || null, difficulty: currentDifficulty, mode: currentMode, user_id: currentUserId})
+    });
+    const data = await res.json();
+    out.innerHTML = res.ok
+      ? `<div class="${proseClass} max-w-none text-sm bg-slate-800/60 border border-slate-700 rounded-xl p-4 anim-in">${marked.parse(data.response)}</div>`
+      : `<p class="text-red-400 text-sm">Error: ${data.detail}</p>`;
+  } catch(e){ out.innerHTML = `<p class="text-red-400 text-sm">Failed to reach server.</p>`; }
 }
 </script>
 </body>
