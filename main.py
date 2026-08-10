@@ -1,6 +1,9 @@
 # Apsara Pro - Core Backend & Routing Integration Module (main.py)
 
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 import json
 import re
 import time
@@ -14,10 +17,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from groq import AsyncGroq
+import requests  # OneCompiler API ke liye added
 
 # ==================== CONFIGURATION ====================
 # Securely fetching API key from Environment Variables (No hardcoded keys)
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "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")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+ONECOMPILER_API_KEY = os.environ.get("ONECOMPILER_API_KEY", "")  # OneCompiler API Key
 
 ENGINE_NAME = "Apsara Pro"  # Public-facing brand name shown everywhere
 
@@ -275,6 +280,9 @@ THOUGHTS = [
     "🧠 Errors are part of learning.",
     "⚡ Your future skill is built today.",
     "🌱 Small progress every day becomes extraordinary skill.",
+    "⚔️Be brave like mharana partap"
+    "🚩jai shree ram"
+    "🚩jai goga ji ki"
 ]
 
 MASTER_RULES = """
@@ -1078,32 +1086,67 @@ async def ai_bugfix(req: BugFixRequest):
         "corrected_code": corrected_code,
         "explanation": explanation
     }
-
 @app.post("/run-code")
 async def run_code(req: RunCodeRequest):
-    check_key()
-    system_parameter = f"""
-    You are {ENGINE_NAME}'s Code Execution Engine. 
-    Simulate the exact output of the provided {req.language} code as if it ran successfully in a terminal.
-    If there are syntax or runtime errors, show the exact traceback/error output.
-    Keep the output clean and formatted.
-    """
-    user_payload = f"Code to execute:\n```\n{req.language}\n{req.code}\n```\nStdin: {req.stdin}"
-    simulated_output = await call_groq(system_parameter, user_payload, 0.2, MAX_TOKENS_SHORT)
-    
+  if not ONECOMPILER_API_KEY:
+    raise HTTPException(
+        status_code=400,
+        detail=(
+            "⚠️ OneCompiler API Key missing! Set the ONECOMPILER_API_KEY"
+            " environment variable."
+        ),
+    )
+
+  API_URL = "https://onecompiler.p.rapidapi.com/v1/run"
+
+  lang_map = {
+      "python": "python",
+      "javascript": "nodejs",
+      "cpp": "cpp",
+      "java": "java",
+      "sql": "sql",
+  }
+  lang_key = lang_map.get(req.language.lower(), req.language.lower())
+
+  payload = {
+      "language": lang_key,
+      "stdin": req.stdin,
+      "files": [{"name": f"main.{req.language.lower()}", "content": req.code}],
+  }
+
+  headers = {
+      "content-type": "application/json",
+      "X-RapidAPI-Key": ONECOMPILER_API_KEY,
+      "X-RapidAPI-Host": "onecompiler.p.rapidapi.com",
+  }
+
+  try:
+    response = requests.post(API_URL, json=payload, headers=headers)
+    res_data = response.json()
+
+    stdout = res_data.get("stdout", "")
+    stderr = res_data.get("stderr", "")
+    exception = res_data.get("exception", "")
+    compile_output = res_data.get("compile_output", "")
+
+    error_msg = stderr or exception or compile_output
+    execution_status = "Accepted" if not error_msg else "Runtime Error / Bug"
+
+    # YAHAN PASTE KRNA HAI (Return statement):
     return {
         "status": "success",
         "result": {
-            "status": "Accepted",
-            "stdout": simulated_output,
-            "stderr": "",
-            "compile_output": "",
-            "time": "0.05",
-            "memory": "1024"
-        }
+            "status": execution_status,
+            "stdout": stdout,
+            "stderr": error_msg,
+            "compile_output": compile_output,
+            "time": "0.1",
+            "memory": "1024",
+        },
     }
-
-
+  except Exception as e:
+    raise HTTPException(status_code=500, detail=str(e))
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host=HOST, port=PORT, reload=True)
+   
