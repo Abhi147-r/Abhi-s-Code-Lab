@@ -1,0 +1,4 @@
+.env
+codelab.db
+__pycache__/
+*.pyc
