@@ -2,3 +2,5 @@ fastapi
 uvicorn
 groq
 pydantic
+python-dotenv
+requests
