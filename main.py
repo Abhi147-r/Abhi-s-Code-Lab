@@ -1144,9 +1144,16 @@ async def run_code(req: RunCodeRequest):
         try:
             api_result = response.json()
         except ValueError:
+            # Preserve a short sanitized hint from gateway/permission errors (e.g. 403).
+            response_hint = " ".join((response.text or "").split())[:300]
+            content_type = response.headers.get("content-type", "unknown")
             raise HTTPException(
                 status_code=502,
-                detail=f"OneCompiler returned a non-JSON response (HTTP {response.status_code}). Check the API key and endpoint.",
+                detail=(
+                    f"OneCompiler returned a non-JSON response (HTTP {response.status_code}, "
+                    f"content-type: {content_type}). Response hint: {response_hint or '[empty body]'}. "
+                    "Check that ONECOMPILER_API_KEY is a direct OneCompiler API Console key."
+                ),
             )
 
         if response.status_code >= 400:
@@ -1189,5 +1196,6 @@ async def run_code(req: RunCodeRequest):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host=HOST, port=PORT, reload=True)
+
 
    
