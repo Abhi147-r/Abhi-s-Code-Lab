@@ -1,4 +1,4 @@
- & Routing Integration Module (main.py)
+# Routing Integration Module (main.py)
 
 import os
 from dotenv import load_dotenv
@@ -21,8 +21,9 @@ import requests  # OneCompiler API ke liye added
 
 # ==================== CONFIGURATION ====================
 # Securely fetching API key from Environment Variables (No hardcoded keys)
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
-ONECOMPILER_API_KEY = os.environ.get("ONECOMPILER_API_KEY", "")  # OneCompiler API Key
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip()
+ONECOMPILER_API_KEY = os.environ.get("ONECOMPILER_API_KEY", "").strip()  # Official OneCompiler API Console key
+GROQ_CHAT_MODEL = os.environ.get("GROQ_CHAT_MODEL", "openai/gpt-oss-120b").strip()
 
 ENGINE_NAME = "Apsara Pro"  # Public-facing brand name shown everywhere
 
@@ -280,9 +281,9 @@ THOUGHTS = [
     "🧠 Errors are part of learning.",
     "⚡ Your future skill is built today.",
     "🌱 Small progress every day becomes extraordinary skill.",
-    "⚔️Be brave like mharana partap"
-    "🚩jai shree ram"
-    "🚩jai goga ji ki"
+    "⚔️ Be brave like Maharana Pratap",
+    "🚩 Jai Shree Ram",
+    "🚩 Jai Goga Ji Ki",
 ]
 
 MASTER_RULES = """
@@ -294,6 +295,10 @@ GLOBAL RULES (always follow, no exceptions):
 - Use Hinglish only when selected; otherwise use clear professional English. Technical keywords can stay in English.
 - Do NOT fabricate facts, learner progress, database results, execution results, or citations.
 - Do not create giant walls of text -- short paragraphs, clear headings, bullets, code blocks. Definition first, depth second.
+- TEACHING STYLE: Teach at an advanced, concept-first standard by default, while matching the requested difficulty. Start with the mental model and prerequisites, then explain how the mechanism works step by step. For Intermediate/Advanced learners, include relevant internals, assumptions, trade-offs, edge cases, failure modes, performance or complexity, and production use where useful. Do not add complexity unrelated to the question.
+- For code explanations, provide runnable code when requested, explain non-obvious lines, trace a concrete input/output example, and mention meaningful tests or edge cases. Separate correctness, efficiency, and security concerns when relevant.
+- Build intuition before terminology; define unfamiliar technical terms briefly. If the learner selects Beginner, scaffold the same accurate idea in simpler language instead of omitting the core concept.
+- End substantial lessons with a short check-your-understanding prompt or practical challenge when it fits the request.
 - Stay strictly on the learner's asked topic.
 - Never blindly recommend dangerous or insecure code.
 - Never expose or request real API keys/secrets.
@@ -524,9 +529,9 @@ async def call_groq(system_prompt: str, user_content: str, temperature: float = 
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_content},
         ],
-        model="llama-3.3-70b-versatile",
+        model=GROQ_CHAT_MODEL,
         temperature=temperature,
-        max_tokens=max_tokens,
+        max_completion_tokens=max_tokens,
     )
     return chat_completion.choices[0].message.content
 
@@ -670,7 +675,8 @@ async def search(q: str = Query(..., min_length=1), language: str | None = None)
 @app.post("/ask-doubt")
 async def ask_doubt(req: DoubtRequest):
     check_key()
-    system_prompt = f"You are Apsara Pro mentor at Abhi's CodeLab. Answer user doubt regarding {req.topic} in {req.language} with daily life examples and diagrams."
+    system_prompt = f"""You are Apsara Pro mentor at Abhi's CodeLab. Answer the user's doubt about {req.topic} in {req.language} at {req.difficulty} level. Explain the underlying mental model and reasoning, then give a practical example and a compact diagram if useful.
+{MASTER_RULES}"""
     ai_response = await call_groq(system_prompt, req.doubt, 0.3, MAX_TOKENS_SHORT)
     return {"status": "success", "response": ai_response}
 
@@ -709,28 +715,32 @@ async def ask_ai(req: TopicRequest):
 @app.post("/explain")
 async def explain(req: ExplainRequest):
     check_key()
-    system_prompt = f"Explain specifically: {req.confusing_part} for {req.topic} in {req.language} with examples and diagrams."
+    system_prompt = f"""Explain specifically: {req.confusing_part} for {req.topic} in {req.language} at {req.difficulty} level. Begin with intuition, then explain the mechanism and relevant edge cases. Include a practical example and diagram where useful.
+{MASTER_RULES}"""
     response = await call_groq(system_prompt, req.confusing_part, 0.3, MAX_TOKENS_SHORT)
     return {"status": "success", "response": response}
 
 @app.post("/example")
 async def example(req: ExampleRequest):
     check_key()
-    system_prompt = f"Give analogy and code example for {req.topic} in {req.language}."
+    system_prompt = f"""Teach {req.topic} in {req.language} at {req.difficulty} level. Give a realistic analogy, then a runnable code example with a brief walkthrough, sample input/output, and one useful edge case.
+{MASTER_RULES}"""
     response = await call_groq(system_prompt, "Give example", 0.3, MAX_TOKENS_SHORT)
     return {"status": "success", "response": response}
 
 @app.post("/visualize")
 async def visualize(req: VisualizeRequest):
     check_key()
-    system_prompt = f"Visualize {req.topic} in {req.language} using ASCII or Mermaid diagram."
+    system_prompt = f"""Explain and visualize {req.topic} in {req.language} at {req.difficulty} level. Build the mental model first, then provide a clear ASCII or Mermaid diagram and explain how to read it.
+{MASTER_RULES}"""
     response = await call_groq(system_prompt, "Visualize", 0.3, MAX_TOKENS_SHORT)
     return {"status": "success", "response": response}
 
 @app.post("/interview")
 async def interview(req: InterviewRequest):
     check_key()
-    system_prompt = f"Provide MNC interview questions with answers for {req.topic} in {req.language}."
+    system_prompt = f"""Provide technically rigorous interview questions with answers for {req.topic} in {req.language} at {req.difficulty} level. Explain the reasoning behind each answer, include likely edge cases or trade-offs, and distinguish a strong answer from common misconceptions.
+{MASTER_RULES}"""
     response = await call_groq(system_prompt, "Interview questions", 0.35, MAX_TOKENS_QUIZ)
     return {"status": "success", "response": response}
 
@@ -1088,65 +1098,96 @@ async def ai_bugfix(req: BugFixRequest):
     }
 @app.post("/run-code")
 async def run_code(req: RunCodeRequest):
-  if not ONECOMPILER_API_KEY:
-    raise HTTPException(
-        status_code=400,
-        detail=(
-            "⚠️ OneCompiler API Key missing! Set the ONECOMPILER_API_KEY"
-            " environment variable."
-        ),
-    )
+    if not ONECOMPILER_API_KEY:
+        raise HTTPException(
+            status_code=400,
+            detail="OneCompiler API key missing. Set ONECOMPILER_API_KEY in your .env file.",
+        )
 
-  API_URL = "https://onecompiler.p.rapidapi.com/v1/run"
-
-  lang_map = {
-      "python": "python",
-      "javascript": "nodejs",
-      "cpp": "cpp",
-      "java": "java",
-      "sql": "sql",
-  }
-  lang_key = lang_map.get(req.language.lower(), req.language.lower())
-
-  payload = {
-      "language": lang_key,
-      "stdin": req.stdin,
-      "files": [{"name": f"main.{req.language.lower()}", "content": req.code}],
-  }
-
-  headers = {
-      "content-type": "application/json",
-      "X-RapidAPI-Key": ONECOMPILER_API_KEY,
-      "X-RapidAPI-Host": "onecompiler.p.rapidapi.com",
-  }
-
-  try:
-    response = requests.post(API_URL, json=payload, headers=headers)
-    res_data = response.json()
-
-    stdout = res_data.get("stdout", "")
-    stderr = res_data.get("stderr", "")
-    exception = res_data.get("exception", "")
-    compile_output = res_data.get("compile_output", "")
-
-    error_msg = stderr or exception or compile_output
-    execution_status = "Accepted" if not error_msg else "Runtime Error / Bug"
-
-    # YAHAN PASTE KRNA HAI (Return statement):
-    return {
-        "status": "success",
-        "result": {
-            "status": execution_status,
-            "stdout": stdout,
-            "stderr": error_msg,
-            "compile_output": compile_output,
-            "time": "0.1",
-            "memory": "1024",
-        },
+    # The official OneCompiler API expects its own language IDs (not RapidAPI IDs).
+    language_aliases = {
+        "python": ("python", "main.py"),
+        "javascript": ("javascript", "main.js"),
+        "js": ("javascript", "main.js"),
+        "cpp": ("cpp", "main.cpp"),
+        "c++": ("cpp", "main.cpp"),
+        "c": ("c", "main.c"),
+        "java": ("java", "Main.java"),
+        "sql": ("sql", "main.sql"),
     }
-  except Exception as e:
-    raise HTTPException(status_code=500, detail=str(e))
+    requested_language = req.language.strip().lower()
+    language_info = language_aliases.get(requested_language)
+    if language_info is None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported language '{req.language}'. Supported here: Python, JavaScript, C, C++, Java, SQL.",
+        )
+
+    language_id, file_name = language_info
+    payload = {
+        "language": language_id,
+        "stdin": req.stdin,
+        "files": [{"name": file_name, "content": req.code}],
+    }
+    headers = {
+        "Content-Type": "application/json",
+        "X-API-Key": ONECOMPILER_API_KEY,
+    }
+
+    try:
+        response = requests.post(
+            "https://api.onecompiler.com/v1/run",
+            json=payload,
+            headers=headers,
+            timeout=30,
+        )
+        try:
+            api_result = response.json()
+        except ValueError:
+            raise HTTPException(
+                status_code=502,
+                detail=f"OneCompiler returned a non-JSON response (HTTP {response.status_code}). Check the API key and endpoint.",
+            )
+
+        if response.status_code >= 400:
+            message = api_result.get("error") or api_result.get("message") or "Request rejected"
+            raise HTTPException(
+                status_code=502,
+                detail=f"OneCompiler API returned HTTP {response.status_code}: {message}",
+            )
+        if api_result.get("status") == "failed":
+            message = api_result.get("error") or "API request failed"
+            raise HTTPException(status_code=502, detail=f"OneCompiler API error: {message}")
+
+        stdout = api_result.get("stdout") or ""
+        stderr = api_result.get("stderr") or ""
+        exception = api_result.get("exception") or ""
+        compile_output = api_result.get("compile_output") or ""
+        error_text = stderr or exception or compile_output
+
+        return {
+            "status": "success",
+            "result": {
+                "status": "Accepted" if not error_text else "Runtime Error / Compilation Error",
+                "stdout": stdout,
+                "stderr": stderr,
+                "compile_output": compile_output,
+                "exception": exception,
+                "time": api_result.get("executionTime"),
+                "memory": api_result.get("memoryUsed"),
+            },
+        }
+    except HTTPException:
+        raise
+    except requests.RequestException as exc:
+        logger.exception("OneCompiler request failed")
+        raise HTTPException(
+            status_code=502,
+            detail=f"Could not reach OneCompiler API: {exc.__class__.__name__}",
+        )
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host=HOST, port=PORT, reload=True)
+
    
