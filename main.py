@@ -1,4 +1,4 @@
-# Apsara Pro - Core Backend & Routing Integration Module (main.py)
+ & Routing Integration Module (main.py)
 
 import os
 from dotenv import load_dotenv
